@@ -1,32 +1,25 @@
+<!DOCTYPE html>
 <html>
-    <head>
-        <title>First Three.js</title>
-        <style type="text/css">
-            body {margin: 0;}
-            canvas {width: 100%; height: 100%}
-        </style>
-    </head>
-    <body>
-        <script type="text/javascript" src="js/three.min.js"></script>
-        <script type="text/javascript" src="js/OBJMTLLoader.js"></script>
-        <script type="text/javascript" src="js/MTLLoader.js"></script>
-        <script type="text/javascript" src="js/jquery-1.11.3.min.js"></script>
-
-        <script type="text/javascript" src="myjs/MovingObject.js"></script>
-        <script type="text/javascript" src="myjs/FollowingCamera.js"></script>
-        <script type="text/javascript" src="Master.js"></script>
-
-        <script type="text/javascript">
-            var master = new Master();
-            master.init();
-            var car = master.addCar();
-            master.addAmbientLight();
-            master.addDirectionalLight();
-            master.addAxis();
-            master.addGround();
-            master.addTrees({count: 10});
-            master.addHouses({count: 3});
-            master.setRepaintTimer(100);
-        </script>
-    </body>
+<head>
+    <title>ThreeGL Experiments!</title>
+</head>
+<body>
+<h2> Version wise progress of this project</h2>
+<ol>
+    <li>
+        <div>
+            <h3><a href="v1.0/index.html">Version 1.0</a></h3>
+            <h5>
+                <ul>
+                    <li>Read obj files</li>
+                    <li>Setup following camera behind moving object</li>
+                    <li>Ading ambient and directional lights and </li>
+                    <li>Boundary conditions for movement</li>
+                    <li>Boundary conditions for movement</li>
+                </ul>
+            </h5>
+        </div>
+    </li>
+</ol>
+</body>
 </html>
