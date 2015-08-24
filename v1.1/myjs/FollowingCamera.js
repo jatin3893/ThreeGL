@@ -1,5 +1,5 @@
-var RADIUS = 80;
-var HEIGHT = 40;
+var RADIUS = 10;
+var HEIGHT = 4;
 
 function FollowingCamera(_camera, _target) {
 

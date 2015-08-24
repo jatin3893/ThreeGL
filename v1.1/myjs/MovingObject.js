@@ -8,7 +8,7 @@ var Keys = {
 var FORCE_ACCELERATE = 1;
 var FORCE_BRAKE = 1;
 var FORCE_FRICTION = -0.2;
-var ANGULAR_SPEED = 2 * Math.PI / 180.0;
+var ANGULAR_SPEED = 1 * Math.PI / 180.0;
 
 function MovingObject(_body) {
     this.body = _body;
@@ -36,17 +36,19 @@ function MovingObject(_body) {
     this.handleEvent = function(event) {
         switch(event.which) {
             case Keys.LEFT:{
-                this.orientation -= ANGULAR_SPEED;
+                var currentAngularSpeed = ANGULAR_SPEED;
+                this.orientation -= currentAngularSpeed;
                 this.front.x = Math.cos(this.orientation);
                 this.front.z = Math.sin(this.orientation);
-                this.body.rotateY(ANGULAR_SPEED);
+                this.body.rotateY(currentAngularSpeed);
                 break;
             }
             case Keys.RIGHT:{
-                this.orientation += ANGULAR_SPEED;
+                var currentAngularSpeed = ANGULAR_SPEED;
+                this.orientation += currentAngularSpeed;
                 this.front.x = Math.cos(this.orientation);
                 this.front.z = Math.sin(this.orientation);
-                this.body.rotateY(-ANGULAR_SPEED);
+                this.body.rotateY(-currentAngularSpeed);
                 break;
             }
             case Keys.UP:{

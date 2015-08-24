@@ -71,9 +71,6 @@ function Master() {
                 newObject.position.x = Math.random() * currentObject.xRange - currentObject.xRange / 2;
                 newObject.position.z = Math.random() * currentObject.zRange - currentObject.zRange / 2;
                 newObject.rotateY(Math.random() * Math.PI);
-                newObject.scale.x = 4;
-                newObject.scale.y = 4;
-                newObject.scale.z = 4;
                 scene.add(newObject);
             }
         };
@@ -86,30 +83,11 @@ function Master() {
         this.loadMTLFile('models/Tree.obj', 'models/Tree.mtl', onLoaded, onProgress, onError);
     }
 
-    this.addHouses = function(args) {
-        var currentObject = this;
-        onLoaded = function(houseObject) {
-            for (i = 0; i < args.count; i++) {
-                var newObject = houseObject.clone();
-                newObject.position.x = Math.random() * currentObject.xRange - currentObject.xRange / 2;
-                newObject.position.z = Math.random() * currentObject.zRange - currentObject.zRange / 2;
-                newObject.rotateY(Math.random() * Math.PI);
-                scene.add(newObject);
-            }
-        };
-        onProgress = function() {
-
-        };
-        onError = function() {
-
-        };
-        this.loadMTLFile('models/House.obj', 'models/House.mtl', onLoaded, onProgress, onError);
-    }
-
     this.addCar = function(args) {
         var currentObject = this;
         onLoaded = function(carObject) {
             carObject.rotateY(Math.PI / 2);
+            // carObject.position.y += 10;
             currentObject.controlledObject = new MovingObject(carObject);
             currentObject.sceneObjectList[currentObject.sceneObjectList.length] = carObject;
             currentObject.followingCam.setTarget(currentObject.controlledObject);
@@ -122,7 +100,7 @@ function Master() {
         onError = function() {
 
         };
-        this.loadMTLFile('models/Car.obj', 'models/Car.mtl', onLoaded, onProgress, onError);
+        this.loadMTLFile('models/Colt.obj', 'models/Colt.mtl', onLoaded, onProgress, onError);
     }
 
     this.addAmbientLight = function(args) {
