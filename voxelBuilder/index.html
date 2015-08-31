@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Voxel Builder</title>
+</head>
+<body>
+    <style type="text/css">
+        body {margin: 0;}
+        canvas {width: 100%; height: 100%}
+    </style>
+
+    <script type="text/javascript" src="three.min.js"></script>
+    <script type="text/javascript" src="OrbitControls.js"></script>
+    Read the instructions in the console. <a href = 'http://webmasters.stackexchange.com/a/77337'>Read how to open a JS Console in your browser</a>
+    <script type="text/javascript">
+
+    var camera, scene, renderer;
+    var zoomLevel = 200.0, AngleOfVision = 45;
+    var lastClickPositionX, lastClickPositionY;
+    var mouse, raycaster;
+    var objects = [];
+    var materialDictionary = []
+    var isShiftDown  = false;
+    var currentGeometry, currentMaterial;
+    var rollOverMesh, rollOverGeo, rollOverMaterial;
+    var voxelSize = 25;
+    var groundSize = 1000;
+
+    initMaterialDictionary();
+    init();
+    render();
+
+    function init() {
+        container = document.createElement('div');
+        document.body.appendChild(container);
+
+        camera = new THREE.PerspectiveCamera(AngleOfVision, window.innerWidth / window.innerHeight, 1, 10000);
+        camera.lookAt(new THREE.Vector3());
+        camera.position.x = zoomLevel;
+        camera.position.y = zoomLevel;
+        camera.position.z = zoomLevel;
+
+        controls = new THREE.OrbitControls(camera);
+        controls.damping = 0.1;
+        controls.addEventListener('change', render);
+
+        scene = new THREE.Scene();
+
+        // Display grid of 100x100 for simplicity
+        var size = groundSize / 2, step = voxelSize;
+        var gridGeometry = new THREE.Geometry();
+
+        for (i = -size; i <= size; i+= step) {
+            gridGeometry.vertices.push( new THREE.Vector3(-size, 0, i) );
+            gridGeometry.vertices.push( new THREE.Vector3(size, 0, i) );
+
+            gridGeometry.vertices.push( new THREE.Vector3(i, 0, -size) );
+            gridGeometry.vertices.push( new THREE.Vector3(i, 0, size) );
+        }
+        var gridMaterial = new THREE.LineBasicMaterial({color: 0xffffff});
+        var gridMesh = new THREE.Line(gridGeometry, gridMaterial, THREE.LinePieces);
+        scene.add(gridMesh);
+
+        currentGeometry = new THREE.BoxGeometry(voxelSize, voxelSize, voxelSize);
+        currentMaterial = new THREE.MeshLambertMaterial({ color: 0xfeb74c});
+
+        // roll over helpers
+        rollOverGeo = new THREE.BoxGeometry(voxelSize, voxelSize, voxelSize);
+        rollOverMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, opacity: 0.5, transparent: true } );
+        rollOverMesh = new THREE.Mesh( rollOverGeo, rollOverMaterial );
+        scene.add( rollOverMesh );
+
+        // Lights
+
+        var directionalLight = new THREE.DirectionalLight(0xffffff);
+        directionalLight.position.set(300, 300, 300);
+        scene.add(directionalLight);
+
+        var pointLight1 = new THREE.PointLight(0xffffff);
+        pointLight1.position.set(100, 100, 100);
+        scene.add(pointLight1);
+
+        var pointLight2 = new THREE.PointLight(0xaaaaaa);
+        pointLight2.position.set(-100, 100, -100);
+        scene.add(pointLight2);
+
+        // Raycaster
+        raycaster = new THREE.Raycaster();
+        mouse = new THREE.Vector2()
+
+        var geometry = new THREE.BoxGeometry( groundSize, voxelSize, groundSize );
+        var planeMaterial = new THREE.MeshLambertMaterial({color: 0x00f0f0});
+
+        plane = new THREE.Mesh( geometry, planeMaterial );
+        plane.translateY(-voxelSize / 2);
+        plane.visible = false;
+        scene.add( plane );
+
+        objects.push( plane );
+
+        renderer = new THREE.WebGLRenderer( { antialias: true } );
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        container.appendChild( renderer.domElement );
+
+        document.addEventListener('mousemove', onDocMouseMove, false);
+        document.addEventListener('mousedown', onDocMouseDown, false);
+        document.addEventListener('mouseup', onDocMouseUp, false);
+        document.addEventListener('keyup', onKeyUp, false);
+        document.addEventListener('keydown', onKeyDown, false);
+        document.addEventListener('scroll', onMouseScroll, false);
+        window.addEventListener( 'resize', onWindowResize, false );
+    }
+
+    function initMaterialDictionary() {
+        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0xff0000}));
+        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0x00ff00}));
+        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0x0000ff}));
+        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0xff00ff}));
+        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0xffff00}));
+        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0x00ffff}));
+        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0xf0f0f0}));
+        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0x0f0f0f}));
+        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0x000000}));
+        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0xffffff}));
+
+    }
+    function onDocMouseMove(event) {
+        if (!isShiftDown) {
+            mouse.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
+            raycaster.setFromCamera( mouse, camera );
+            var intersects = raycaster.intersectObjects( objects );
+            if ( intersects.length > 0 ) {
+                var intersect = intersects[ 0 ];
+                rollOverMesh.position.copy( intersect.point ).add(intersect.face.normal);
+                rollOverMesh.position.divideScalar(voxelSize);
+                rollOverMesh.position.floor();
+                rollOverMesh.position.multiplyScalar(voxelSize);
+                rollOverMesh.position.addScalar(voxelSize / 2);
+            }
+            render();
+        }
+    }
+
+    function onDocMouseDown(event) {
+        mouse.set( (event.clientX / window.innerWidth) * 2 - 1, -((event.clientY / window.innerHeight) * 2 - 1));
+        raycaster.setFromCamera(mouse, camera);
+        var intersects = raycaster.intersectObjects(objects);
+        if (intersects.length > 0){
+            var intersectingObject = intersects[0];
+            if (isShiftDown) {
+                // Delete object
+                if (intersectingObject.object != plane) {
+                    scene.remove(intersectingObject.object);
+                    objects.splice(objects.indexOf(intersectingObject.object), 1);
+                }
+            } else {
+                var voxel = new THREE.Mesh( currentGeometry, currentMaterial );
+                voxel.position.copy( intersectingObject.point ).add(intersectingObject.face.normal);
+                voxel.position.divideScalar(voxelSize);
+                voxel.position.floor();
+                voxel.position.multiplyScalar(voxelSize);
+                voxel.position.addScalar(voxelSize / 2);
+                scene.add( voxel );
+                objects.push( voxel );
+            }
+            render();
+        }
+    }
+
+    function onDocMouseUp(event) {
+    }
+
+    function onKeyUp(event) {
+        switch(event.which) {
+            case 16: isShiftDown = false; rollOverMesh.visible = true; render(); break;
+        }
+
+    }
+
+    function onKeyDown(event) {
+        switch(event.which) {
+            case 48: case 49: case 50: case 51: case 52: case 53: case 54: case 55:
+            case 56: case 57: currentMaterial = materialDictionary[event.which - 48]; break;
+
+            case 16: isShiftDown = true; rollOverMesh.visible = false; render(); break;
+        }
+    }
+
+    function onMouseScroll(eventObj) {
+    }
+
+    function render() {
+        renderer.render(scene, camera);
+    }
+
+    function onWindowResize() {
+
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        render();
+
+    }
+    </script>
+
+    <script type="text/javascript">
+    console.log('Mouse controls');
+    console.log('Left click: Create a Voxel');
+    console.log('Shift + Left Click: Delete a voxel');
+    console.log('Click + Drag: Rotate around the center');
+    console.log('Left + Right Click and Drag: Pan')
+    console.log('Scroll: Zoom');
+    console.log('Keys 0-9: Different coloured Voxels');
+    console.log('It is still a work in progress! This project takes inspiration from the examples provided by Three.js');
+    console.log('Made using Three.js: http://threejs.org');
+    console.log('Read more about voxels on wikipedia: https://en.wikipedia.org/wiki/Voxel');
+    </script>
+</body>
+</html>
