@@ -160,13 +160,13 @@
 
         objects.push( plane );
 
-        renderer.domElement.addEventListener('mousemove', onDocMouseMove, false);
-        renderer.domElement.addEventListener('mousedown', onDocMouseDown, false);
-        renderer.domElement.addEventListener('mouseup', onDocMouseUp, false);
-        renderer.domElement.addEventListener('keyup', onKeyUp, false);
-        renderer.domElement.addEventListener('keydown', onKeyDown, false);
-        renderer.domElement.addEventListener('scroll', onMouseScroll, false);
-        window.addEventListener( 'resize', onWindowResize, false );
+        renderer.domElement.addEventListener('mousemove', onDivMouseMove, false);
+        renderer.domElement.addEventListener('mousedown', onDivMouseDown, false);
+        renderer.domElement.addEventListener('mouseup', onDivMouseUp, false);
+        renderer.domElement.addEventListener('scroll', onDivMouseScroll, false);
+        document.addEventListener('keyup', onWinKeyUp, false);
+        document.addEventListener('keydown', onWinKeyDown, false);
+        window.addEventListener( 'resize', onWinResize, false );
     }
 
     function initMaterialDictionary() {
@@ -182,7 +182,7 @@
         materialDictionary.push(new THREE.MeshLambertMaterial({color: 0xffffff}));
 
     }
-    function onDocMouseMove(event) {
+    function onDivMouseMove(event) {
 
         if (!isShiftDown) {
             mouse.set( ( event.clientX / canvasWidth ) * 2 - 1, - ( event.clientY / canvasHeight ) * 2 + 1 );
@@ -200,7 +200,7 @@
         }
     }
 
-    function onDocMouseDown(event) {
+    function onDivMouseDown(event) {
         mouse.set( (event.clientX / canvasWidth) * 2 - 1, -((event.clientY / canvasHeight) * 2 - 1));
         raycaster.setFromCamera(mouse, camera);
         var intersects = raycaster.intersectObjects(objects);
@@ -226,33 +226,34 @@
         }
     }
 
-    function onDocMouseUp(event) {
+    function onDivMouseUp(event) {
     }
 
-    function onKeyUp(event) {
+    function onWinKeyUp(event) {
         switch(event.which) {
             case 16: isShiftDown = false; rollOverMesh.visible = true; render(); break;
         }
-
+        render();
     }
 
-    function onKeyDown(event) {
+    function onWinKeyDown(event) {
         switch(event.which) {
             case 48: case 49: case 50: case 51: case 52: case 53: case 54: case 55:
             case 56: case 57: currentMaterial = materialDictionary[event.which - 48]; break;
 
             case 16: isShiftDown = true; rollOverMesh.visible = false; render(); break;
         }
+        render();
     }
 
-    function onMouseScroll(eventObj) {
+    function onDivMouseScroll(eventObj) {
     }
 
     function render() {
         renderer.render(scene, camera);
     }
 
-    function onWindowResize() {
+    function onWinResize() {
 
         camera.aspect = canvasWidth / canvasHeight;
         camera.updateProjectionMatrix();
