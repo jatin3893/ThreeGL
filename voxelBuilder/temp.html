@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+<script type="text/javascript">
+    container1 = document.createElement('div');
+    container1.innerHTML = "Hello World! <br><br><>"
+    document.body.appendChild(container1);
+
+    container2 = document.createElement('div');
+    container2.innerHTML = "Hello World!2"
+    document.body.appendChild(container2);
+
+    container1.addEventListener('mousedown', function() {
+        console.log('Mouse Down! on 1');
+    }, false);
+
+    container2.addEventListener('mousedown', function() {
+        console.log('Mouse Down on 2!');
+    }, false);
+</script>
+</body>
+
+</html>

@@ -5,15 +5,69 @@
 </head>
 <body>
     <style type="text/css">
-        body {margin: 0;}
-        canvas {width: 100%; height: 100%}
+        body {
+            margin: 0;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        #top {
+        }
+        #mousecontrols {
+        }
+        #keyboardcontrols {
+        }
+        #help {
+            float: right;
+            width: 24%;
+        }
+        #renderer {
+            background-color: #000000;
+            border: 2px solid #ff0000;
+            float: left;
+            width: 75%;
+            overflow: hidden;
+        }
     </style>
 
+        <div id = 'renderer'>
+            
+        </div>
+        <div id = 'help'>
+            <div id = 'top'>
+                <h1 align="center">Voxel Builder v1.0</h1>
+                <h2 align="center">Instructions!</h2>
+            </div>
+            <div id = 'mousecontrols'>
+                <h3>
+                    Mouse Controls:</h3>
+                <ul>
+                    <li><strong>Left Click and Drag</strong>: <em>Orbit</em> around the center</li>
+                    <li><strong>Left Click + Right Click and Drag</strong>: <em>Pan</em> around the scene</li>
+                    <li><strong>Scroll Up/Down</strong>: <em>Zoom</em> In/Out</li>
+                    <li><strong>Left Click:</strong> <em>Create</em> a new Voxel</li>
+                    <li><strong>Shift + Left Click</strong>: <em>Delete</em> a Voxel</li>
+                </ul>
+            </div>
+            <br>
+            <div id = 'keyboardcontrols'>
+                <h3>
+                Keyboard Controls:</h3>
+                <ul>
+                    <li><strong>Arrow Keys</strong>: <em>Pan</em> around the scene</li>
+                    <li><strong>Keys 0 to 9</strong>: Map to different Material Colours</li>
+                </ul>
+            </div>
+        </div>
+    
+    <script type="text/javascript" src="jquery-2.1.4.min.js"></script>
     <script type="text/javascript" src="three.min.js"></script>
     <script type="text/javascript" src="OrbitControls.js"></script>
-    Read the instructions in the console. <a href = 'http://webmasters.stackexchange.com/a/77337'>Read how to open a JS Console in your browser</a>
+
     <script type="text/javascript">
 
+    var canvasWidth = 600, canvasHeight = 600;
     var camera, scene, renderer;
     var zoomLevel = 200.0, AngleOfVision = 45;
     var lastClickPositionX, lastClickPositionY;
@@ -26,21 +80,29 @@
     var voxelSize = 25;
     var groundSize = 1000;
 
-    initMaterialDictionary();
     init();
+    initMaterialDictionary();
     render();
 
     function init() {
-        container = document.createElement('div');
-        document.body.appendChild(container);
+        container = document.getElementById('renderer');
 
-        camera = new THREE.PerspectiveCamera(AngleOfVision, window.innerWidth / window.innerHeight, 1, 10000);
+        renderer = new THREE.WebGLRenderer( { antialias: true } );
+        container.appendChild( renderer.domElement );
+
+        canvasWidth = container.clientWidth;
+        canvasHeight = container.clientHeight;
+
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( canvasWidth, canvasHeight );
+
+        camera = new THREE.PerspectiveCamera(AngleOfVision, canvasWidth / canvasHeight, 1, 10000);
         camera.lookAt(new THREE.Vector3());
         camera.position.x = zoomLevel;
         camera.position.y = zoomLevel;
         camera.position.z = zoomLevel;
 
-        controls = new THREE.OrbitControls(camera);
+        controls = new THREE.OrbitControls(camera, container);
         controls.damping = 0.1;
         controls.addEventListener('change', render);
 
@@ -98,17 +160,12 @@
 
         objects.push( plane );
 
-        renderer = new THREE.WebGLRenderer( { antialias: true } );
-        renderer.setPixelRatio( window.devicePixelRatio );
-        renderer.setSize( window.innerWidth, window.innerHeight );
-        container.appendChild( renderer.domElement );
-
-        document.addEventListener('mousemove', onDocMouseMove, false);
-        document.addEventListener('mousedown', onDocMouseDown, false);
-        document.addEventListener('mouseup', onDocMouseUp, false);
-        document.addEventListener('keyup', onKeyUp, false);
-        document.addEventListener('keydown', onKeyDown, false);
-        document.addEventListener('scroll', onMouseScroll, false);
+        renderer.domElement.addEventListener('mousemove', onDocMouseMove, false);
+        renderer.domElement.addEventListener('mousedown', onDocMouseDown, false);
+        renderer.domElement.addEventListener('mouseup', onDocMouseUp, false);
+        renderer.domElement.addEventListener('keyup', onKeyUp, false);
+        renderer.domElement.addEventListener('keydown', onKeyDown, false);
+        renderer.domElement.addEventListener('scroll', onMouseScroll, false);
         window.addEventListener( 'resize', onWindowResize, false );
     }
 
@@ -126,8 +183,9 @@
 
     }
     function onDocMouseMove(event) {
+
         if (!isShiftDown) {
-            mouse.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
+            mouse.set( ( event.clientX / canvasWidth ) * 2 - 1, - ( event.clientY / canvasHeight ) * 2 + 1 );
             raycaster.setFromCamera( mouse, camera );
             var intersects = raycaster.intersectObjects( objects );
             if ( intersects.length > 0 ) {
@@ -143,7 +201,7 @@
     }
 
     function onDocMouseDown(event) {
-        mouse.set( (event.clientX / window.innerWidth) * 2 - 1, -((event.clientY / window.innerHeight) * 2 - 1));
+        mouse.set( (event.clientX / canvasWidth) * 2 - 1, -((event.clientY / canvasHeight) * 2 - 1));
         raycaster.setFromCamera(mouse, camera);
         var intersects = raycaster.intersectObjects(objects);
         if (intersects.length > 0){
@@ -196,26 +254,13 @@
 
     function onWindowResize() {
 
-        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.aspect = canvasWidth / canvasHeight;
         camera.updateProjectionMatrix();
 
-        renderer.setSize( window.innerWidth, window.innerHeight );
+        renderer.setSize( canvasWidth, canvasHeight );
         render();
 
     }
-    </script>
-
-    <script type="text/javascript">
-    console.log('Mouse controls');
-    console.log('Left click: Create a Voxel');
-    console.log('Shift + Left Click: Delete a voxel');
-    console.log('Click + Drag: Rotate around the center');
-    console.log('Left + Right Click and Drag: Pan')
-    console.log('Scroll: Zoom');
-    console.log('Keys 0-9: Different coloured Voxels');
-    console.log('It is still a work in progress! This project takes inspiration from the examples provided by Three.js');
-    console.log('Made using Three.js: http://threejs.org');
-    console.log('Read more about voxels on wikipedia: https://en.wikipedia.org/wiki/Voxel');
     </script>
 </body>
 </html>
