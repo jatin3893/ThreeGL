@@ -55,7 +55,7 @@
                     <li><strong>Left Click and Drag</strong>: <em>Orbit</em> around the center</li>
                     <li><strong>Left Click + Right Click and Drag</strong>: <em>Pan</em> around the scene</li>
                     <li><strong>Scroll Up/Down</strong>: <em>Zoom</em> In/Out</li>
-                    <li><strong>Left Click:</strong> <em>Create</em> a new Voxel</li>
+                    <li><strong>Ctrl + Left Click:</strong> <em>Create</em> a new Voxel</li>
                     <li><strong>Shift + Left Click</strong>: <em>Delete</em> a Voxel</li>
                 </ul>
             </div>
@@ -83,11 +83,13 @@
     var mouse, raycaster;
     var objects = [];
     var materialDictionary = []
-    var isShiftDown  = false;
+    var isShiftDown  = false, isAltDown = false, isCtrlDown = false;
     var currentGeometry, currentMaterial;
     var rollOverMesh, rollOverGeo, rollOverMaterial;
+    var selectionMaterial, lastMaterial;
     var voxelSize = 25;
     var groundSize = 1000;
+    var selectedMesh;
 
     init();
     initMaterialDictionary();
@@ -139,8 +141,10 @@
         rollOverGeo = new THREE.BoxGeometry(voxelSize, voxelSize, voxelSize);
         rollOverMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, opacity: 0.5, transparent: true } );
         rollOverMesh = new THREE.Mesh( rollOverGeo, rollOverMaterial );
+        rollOverMesh.visible = false;
         scene.add( rollOverMesh );
 
+        selectionMaterial = new THREE.MeshLambertMaterial({color: 0xdddddd, opacity: 0.5, transparent: true});
         // Lights
 
         var directionalLight = new THREE.DirectionalLight(0xffffff);
@@ -179,21 +183,21 @@
     }
 
     function initMaterialDictionary() {
-        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0xff0000}));
-        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0x00ff00}));
-        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0x0000ff}));
-        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0xff00ff}));
-        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0xffff00}));
-        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0x00ffff}));
-        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0xf0f0f0}));
-        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0x0f0f0f}));
-        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0x000000}));
-        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0xffffff}));
+        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0xff0000, transparent: true}));
+        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0x00ff00, transparent: true}));
+        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0x0000ff, transparent: true}));
+        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0xff00ff, transparent: true}));
+        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0xffff00, transparent: true}));
+        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0x00ffff, transparent: true}));
+        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0xf0f0f0, transparent: true}));
+        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0x0f0f0f, transparent: true}));
+        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0x000000, transparent: true}));
+        materialDictionary.push(new THREE.MeshLambertMaterial({color: 0xffffff, transparent: true}));
 
     }
     function onDivMouseMove(event) {
 
-        if (!isShiftDown) {
+        if (isCtrlDown) {
             mouse.set( ( event.clientX / canvasWidth ) * 2 - 1, - ( event.clientY / canvasHeight ) * 2 + 1 );
             raycaster.setFromCamera( mouse, camera );
             var intersects = raycaster.intersectObjects( objects );
@@ -221,7 +225,7 @@
                     scene.remove(intersectingObject.object);
                     objects.splice(objects.indexOf(intersectingObject.object), 1);
                 }
-            } else {
+            } else if(isCtrlDown) {
                 var voxel = new THREE.Mesh( currentGeometry, currentMaterial );
                 voxel.position.copy( intersectingObject.point ).add(intersectingObject.face.normal);
                 voxel.position.divideScalar(voxelSize);
@@ -230,9 +234,29 @@
                 voxel.position.addScalar(voxelSize / 2);
                 scene.add( voxel );
                 objects.push( voxel );
+            } else {
+                deselectMesh(selectedMesh);
+                selectMesh(intersectingObject.object);
             }
             render();
         }
+    }
+
+    function selectMesh(mesh) {
+        if (mesh == undefined)
+            return;
+        selectedMesh = mesh;
+        lastMaterial = selectedMesh.material;
+        selectedMesh.material = selectionMaterial;
+    }
+
+
+    function deselectMesh(selectedMesh) {
+        if (selectedMesh == undefined)
+            return;
+        selectedMesh.material = lastMaterial;
+        lastMaterial = undefined;
+        selectedMesh = undefined;
     }
 
     function onDivMouseUp(event) {
@@ -240,7 +264,9 @@
 
     function onWinKeyUp(event) {
         switch(event.which) {
-            case 16: isShiftDown = false; rollOverMesh.visible = true; render(); break;
+            case 16: isShiftDown = false; render(); break;
+            case 17: isCtrlDown = false; rollOverMesh.visible = false; render(); break;
+            case 18: isAltDown = false; break;
         }
         render();
     }
@@ -250,7 +276,9 @@
             case 48: case 49: case 50: case 51: case 52: case 53: case 54: case 55:
             case 56: case 57: currentMaterial = materialDictionary[event.which - 48]; break;
 
-            case 16: isShiftDown = true; rollOverMesh.visible = false; render(); break;
+            case 16: isShiftDown = true; render(); break;
+            case 17: isCtrlDown = true; rollOverMesh.visible = true; render(); break;
+            case 18: isAltDown = true; break;
         }
         render();
     }
